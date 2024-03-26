@@ -1,5 +1,6 @@
 package com.exromeo.myapplication.swipeable_item_lib.lib
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.State
@@ -19,10 +20,9 @@ import kotlin.math.abs
  *
  * @param state The current state of the swipeable card. Use [rememberSwipeableCardState] to create.
  * @param onSwiped will be called once a swipe gesture is completed. The given [Direction] will indicate which side the gesture was performed on.
- * @param onSwipeCancel will be called when the gesture is stopped before reaching the minimum threshold to be treated as a full swipe
- * @param blockedDirections the directions which will not trigger a swipe. By default only horizontal swipes are allowed.
  */
-fun Modifier.swipableCard(
+@SuppressLint("ModifierFactoryUnreferencedReceiver")
+fun Modifier.swipeableCard(
     enableUserSwiping:State<Boolean> = mutableStateOf(true),
     state: SwipeableCardState,
     onSwiped: (Direction) -> Unit,
@@ -57,6 +57,7 @@ fun Modifier.swipableCard(
                             state.swipe(Direction.None)
                             onSwiped(Direction.None)
                         } else {
+                            Log.i(TAG, "Dragend: ${state.offset.targetValue.x}")
                             if (state.offset.targetValue.x > 0) {
                                 state.swipe(Direction.Right)
                                 onSwiped(Direction.Right)
@@ -71,9 +72,12 @@ fun Modifier.swipableCard(
             )
         }
 }.graphicsLayer {
+    //dictates the horizontal position of the item
     translationX = state.offset.value.x
     //dictates the rotation of the item
     rotationZ = (state.offset.value.x / 70).coerceIn(-90f, 90f)
+    //dictates the transparency of the item
+    alpha = 1f - abs(state.offset.value.x / state.maxWidth)
 }
 
 

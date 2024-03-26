@@ -5,6 +5,7 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,27 +32,34 @@ fun rememberSwipeableCardState(): SwipeableCardState {
 }
 
 
-class SwipeableCardState(
-    internal val maxWidth: Float,
+class SwipeableCardState(val maxWidth: Float) {
 
-    ) {
+    /**
+     * [offset] is an [Animatable] object to animate the swipe movement of the card.
+     * */
     val offset = Animatable(offset(0f, 0f), Offset.VectorConverter)
 
-    fun isOffScreen(): Boolean {
-        return offset.value.x > maxWidth || offset.value.x < -maxWidth
-    }
+
     /**
-     * The [Direction] the card was swiped at.
-     *
-     * Null value means the card has not been swiped fully yet.
+     * [isOffScreen] is a derived state to check if the card is off the screen.
+     * */
+    val isOffScreen by derivedStateOf {
+        offset.value.x > maxWidth || offset.value.x < -maxWidth
+    }
+
+    /**
+     * The [Direction] the card was swiped at either [Direction.Left] or [Direction.Right].
+     * [Direction.None] means the card was not swiped.
      */
     var swipedDirection: Direction by mutableStateOf(Direction.None)
         private set
 
-    internal suspend fun reset() {
-        offset.animateTo(offset(0f, 0f), tween(400))
-    }
 
+    /**
+     * [swipe] function to animate the card to swipe in a given [Direction].
+     * @param direction the direction to swipe the card.
+     * @param animationSpec the animation spec to be used for the swipe animation.
+     * */
     suspend fun swipe(direction: Direction, animationSpec: AnimationSpec<Offset> = tween(400)) {
         val endX = maxWidth * 4f
 
@@ -63,6 +71,17 @@ class SwipeableCardState(
         this.swipedDirection = direction
     }
 
+    /**
+     * [reset] resets the card to its original position.
+     * */
+    private suspend fun reset() {
+        offset.animateTo(offset(0f, 0f), tween(400))
+    }
+
+
+    /**
+     * [offset] helper function to create an [Offset] object while keeping the current offset values if needed.
+     * */
     private fun offset(x: Float = offset.value.x, y: Float = offset.value.y): Offset {
         return Offset(x, y)
     }

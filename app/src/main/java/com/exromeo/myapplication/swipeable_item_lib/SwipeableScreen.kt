@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
@@ -45,19 +45,21 @@ import com.exromeo.myapplication.SwipesViewModel
 import com.exromeo.myapplication.swipeable_item_lib.lib.Direction
 import com.exromeo.myapplication.swipeable_item_lib.lib.SwipeableCardState
 import com.exromeo.myapplication.swipeable_item_lib.lib.rememberSwipeableCardState
-import com.exromeo.myapplication.swipeable_item_lib.lib.swipableCard
+import com.exromeo.myapplication.swipeable_item_lib.lib.swipeableCard
 import kotlinx.coroutines.launch
 
 @Composable
 fun SwipeableScreen(viewModel: SwipesViewModel, isSwipingEnabled: State<Boolean>) {
-
+    val list = remember {
+        viewModel.list
+    }
     Box(
         Modifier
             .padding(24.dp)
             .fillMaxSize()
             .aspectRatio(1f)
     ) {
-        viewModel.list.fastForEachIndexed { index, matchProfile ->
+        list.fastForEachIndexed { index, matchProfile ->
             val state = rememberSwipeableCardState()
             if (state.swipedDirection == Direction.None) {
 
@@ -70,8 +72,6 @@ fun SwipeableScreen(viewModel: SwipesViewModel, isSwipingEnabled: State<Boolean>
             }
         }
     }
-
-
 }
 
 
@@ -102,12 +102,11 @@ fun ProfileCard(
     isSwipingEnabled: State<Boolean>,
 ) {
     val state: SwipeableCardState = rememberSwipeableCardState()
-    Log.i("TAG", "ProfileCard: ${state.isOffScreen()}")
-    if (state.isOffScreen()/*swipedDirection != Direction.None*/) return
+    Log.i("TAG", "ProfileCard: ${state.isOffScreen}")
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     Box(modifier
-        .swipableCard(
+        .swipeableCard(
             enableUserSwiping = isSwipingEnabled,
             state = state,
             onSwiped = {
@@ -127,6 +126,7 @@ fun ProfileCard(
             }
         )
         .clip(MaterialTheme.shapes.medium)) {
+        if (state.isOffScreen/*swipedDirection != Direction.None*/) return
         Image(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
@@ -174,25 +174,6 @@ fun ProfileCard(
 
     }
 }
-
-@Composable
-private fun Hint(text: String) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .padding(horizontal = 24.dp, vertical = 32.dp)
-            .fillMaxWidth()
-    ) {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
 
 private fun stringFrom(direction: Direction): String {
     return when (direction) {
